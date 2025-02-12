@@ -12,16 +12,13 @@ const Home: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoTitle, setNewTodoTitle] = useState<string>("");
 
-  // Получаем список todo при монтировании компонента
   useEffect(() => {
     fetchTodos();
   }, []);
 
   const fetchTodos = async () => {
     try {
-      const res = await fetch(
-        "https://jsonplaceholder.typicode.com/todos?_limit=10"
-      );
+      const res = await fetch("https://jsonplaceholder.typicode.com/todos?_limit=10");
       const data: Todo[] = await res.json();
       setTodos(data);
     } catch (error) {
@@ -39,26 +36,24 @@ const Home: React.FC = () => {
     };
 
     try {
-      // Оптимистичное обновление UI: добавляем новый todo до подтверждения от сервера
-      const optimisticTodo: Todo = { ...newTodo, id: Date.now() };
+      const tempId = Date.now() + Math.floor(Math.random() * 1000);
+      const optimisticTodo: Todo = { ...newTodo, id: tempId };
       setTodos((prev) => [optimisticTodo, ...prev]);
 
-      const res = await fetch(
-        "https://jsonplaceholder.typicode.com/todos",
-        {
-          method: "POST",
-          headers: {
-            "Content-type": "application/json; charset=UTF-8",
-          },
-          body: JSON.stringify(newTodo),
-        }
-      );
+      const res = await fetch("https://jsonplaceholder.typicode.com/todos", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify(newTodo),
+      });
       const data: Todo = await res.json();
 
-      // Обновляем todo, если сервер вернул другой id или дополнительные поля
+      const updatedTodo: Todo = { ...data, id: optimisticTodo.id };
+
       setTodos((prev) =>
         prev.map((todo) =>
-          todo.id === optimisticTodo.id ? { ...data } : todo
+          todo.id === optimisticTodo.id ? updatedTodo : todo
         )
       );
       setNewTodoTitle("");
@@ -68,7 +63,6 @@ const Home: React.FC = () => {
   };
 
   const deleteTodo = async (id: number) => {
-    // Оптимистичное обновление UI: удаляем todo до подтверждения удаления на сервере
     setTodos((prev) => prev.filter((todo) => todo.id !== id));
 
     try {
@@ -83,8 +77,6 @@ const Home: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Todo List</h1>
-
-      {/* Форма добавления нового todo */}
       <form onSubmit={addTodo} className="mb-4">
         <input
           type="text"
@@ -97,8 +89,6 @@ const Home: React.FC = () => {
           Добавить
         </button>
       </form>
-
-      {/* Список todo */}
       <ul>
         {todos.map((todo) => (
           <li
@@ -122,3 +112,4 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
